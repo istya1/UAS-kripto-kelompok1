@@ -10,121 +10,36 @@
       const text = document.getElementById("cipherResult").innerText;
       navigator.clipboard.writeText(text);
     }
+
+    function toggleProcess(stepId) {
+      const content = document.getElementById(`process-${stepId}`);
+      const arrow = document.getElementById(`arrow-${stepId}`);
+      content.classList.toggle('hidden');
+      arrow.classList.toggle('rotate-90');
+    }
+
+    function copyStepResult(stepName) {
+      const text = document.getElementById(`result-${stepName}`).innerText;
+      navigator.clipboard.writeText(text);
+    }
   </script>
 </head>
 
 <body class="bg-white text-white min-h-screen flex flex-col ">
 
+  <!-- NAVBAR INCLUDE -->
+  {% include 'component/navbar.html' %}
 
-  <!-- Navbar -->
-  <nav class="fixed w-full z-20 backdrop-blur-lg bg-black/60 border-b border-gray-800/60 shadow-md">
-    <div class="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
-
-      <!-- Logo -->
-      <a href="/" class="text-2xl font-extrabold tracking-wide text-blue-500 hover:text-blue-400 transition-all">
-        ENDES<span class="text-gray-300">Crypto</span>
-      </a>
-
-      <!-- Menu -->
-      <ul class="hidden md:flex flex-1 justify-center space-x-8 text-gray-300 font-medium">
-        <li><a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Beranda</a></li>
-        <li><a href="/railfence" class="nav-link {% if request.path == '/railfence' %}active{% endif %}">Rail Fence Cipher</a>
-        </li>
-        <li><a href="/vigenere" class="nav-link {% if request.path == '/vigenere' %}active{% endif %}">Vigenere
-            Cipher</a></li>
-        <li><a href="/stream" class="nav-link {% if request.path == '/stream' %}active{% endif %}">Stream Cipher</a>
-        </li>
-        <li><a href="/aes" class="nav-link {% if request.path == '/aes' %}active{% endif %}">AES Cipher</a></li>
-        <li><a href="/combine" class="nav-link {% if request.path == '/combine' %}active{% endif %}">Combine Cipher</a>
-        </li>
-      </ul>
-
-
-      <!-- Tombol Menu Mobile -->
-      <button id="menu-toggle" class="md:hidden text-gray-300 hover:text-blue-400 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-          class="w-7 h-7">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
-        </svg>
-      </button>
-    </div>
-
-    <!-- Menu Mobile -->
-    <div id="mobile-menu" class="hidden md:hidden bg-black/90 border-t border-gray-800">
-      <ul class="flex flex-col items-center space-y-4 py-4 text-gray-300">
-        <li><a href="/" class="nav-link">Beranda</a></li>
-        <li><a href="/railfence" class="nav-link">Rail Fence Cipher</a></li>
-        <li><a href="/vigenere" class="nav-link">Vigenere Cipher</a></li>
-        <li><a href="/stream" class="nav-link">Stream Cipher</a></li>
-        <li><a href="/aes" class="nav-link">AES Cipher</a></li>
-        <li><a href="/combine" class="nav-link">Combine Cipher</a></li>
-      </ul>
-    </div>
-  </nav>
-  
-  <!-- Style khusus untuk animasi & efek hover -->
-  <style>
-    .nav-link {
-      position: relative;
-      transition: color 0.3s ease;
-    }
-
-    .nav-link::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      bottom: -3px;
-      width: 0%;
-      height: 2px;
-      background-color: #3b82f6;
-      /* warna biru Tailwind */
-      transition: width 0.3s ease;
-    }
-
-    .nav-link:hover {
-      color: #3b82f6;
-    }
-
-    .nav-link:hover::after {
-      width: 100%;
-    }
-
-    /* Link aktif */
-    .nav-link.active {
-      color: #3b82f6;
-      pointer-events: none;
-      /* mencegah hover */
-    }
-
-    .nav-link.active::after {
-      width: 100%;
-      /* garis biru penuh di bawah */
-    }
-
-    .nav-link.active:hover::after {
-      width: 100%;
-      /* pastikan hover tidak merubah */
-    }
-  </style>
-
-  <!-- Script untuk toggle menu di mobile -->
-  <script>
-    document.getElementById('menu-toggle').addEventListener('click', () => {
-      const menu = document.getElementById('mobile-menu');
-      menu.classList.toggle('hidden');
-    });
-  </script>
 
   <!-- Konten -->
   <section
     class="flex flex-col justify-center items-center text-center px-6 bg-cover bg-center relative pt-20 min-h-screen"
     style="background-image: url('{{ url_for('static', filename='back.jpg') }}');">
 
-
     <!-- Overlay gelap + blur -->
     <div class="absolute inset-0 bg-black bg-opacity-80"></div>
 
-    <main class="relative z-10 bg-gray-900/90 p-8 rounded-xl shadow-lg w-full max-w-2xl overflow-hidden">
+    <main class="relative z-10 bg-gray-900/90 p-8 rounded-xl shadow-lg w-full max-w-4xl overflow-hidden">
       <h1 class="text-2xl text-center font-bold text-blue-600 mb-4">Kombinasi 4 Layer</h1>
 
       <!-- Form -->
@@ -147,19 +62,283 @@
 
       <!-- Hasil Akhir -->
       {% if result %}
-      <div class="mt-5 p-4 bg-gray-800 rounded-lg max-h-40 overflow-y-auto break-words">
+      <div class="mt-5 p-4 bg-gray-800 rounded-lg">
         <div class="flex items-center justify-between mb-2">
-          <p class="font-semibold text-blue-300">Hasil Kombinasi:</p>
+          <p class="font-semibold text-blue-300">Hasil Akhir:</p>
           <button onclick="copyResult()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm">Copy</button>
         </div>
-        <p id="cipherResult" class="text-sm text-gray-200 leading-relaxed">{{ result }}</p>
+        <p id="cipherResult" class="text-sm text-gray-200 leading-relaxed break-all">{{ result }}</p>
       </div>
       {% endif %}
 
-      <!-- Proses Perhitungan -->
-      {% if process %}
+      <!-- Proses Perhitungan Detail -->
+      {% if steps %}
+      <div class="mt-6 bg-gray-800 p-4 rounded-lg">
+        <h3 class="font-semibold text-blue-400 mb-4 text-lg">Proses Perhitungan Detail</h3>
+
+        <!-- Rail Fence Process -->
+        <div class="mb-4 border border-gray-700 rounded-lg overflow-hidden">
+          <button onclick="toggleProcess('railfence')"
+            class="w-full bg-gray-700 p-3 text-left font-semibold text-blue-300 flex justify-between items-center">
+            <span>1. Rail Fence Cipher</span>
+            <svg id="arrow-railfence" class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          <div id="process-railfence" class="hidden p-4 bg-gray-900">
+            <div class="mb-3">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-green-400 font-medium">Hasil Rail Fence:</span>
+                <button onclick="copyStepResult('railfence')"
+                  class="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs">Copy</button>
+              </div>
+              <p id="result-railfence" class="text-sm break-all bg-gray-800 p-2 rounded">{{ steps.Railfence }}</p>
+            </div>
+
+            <!-- Visualisasi Zigzag Rail Fence -->
+            {% if visualizations and visualizations.railfence %}
+            <div class="mt-4">
+              <p class="text-green-400 font-medium mb-2">Visualisasi Zigzag:</p>
+              <div class="overflow-x-auto bg-gray-800 p-3 rounded">
+                {% for row in visualizations.railfence %}
+                <div class="flex justify-center space-x-2 mb-1">
+                  {% for cell in row %}
+                  <div class="w-8 h-8 border border-gray-600 flex items-center justify-center text-sm 
+                     {% if cell %}bg-blue-900 text-white{% else %}bg-gray-700{% endif %}">
+                    {{ cell if cell else '' }}
+                  </div>
+                  {% endfor %}
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Vigenere Process -->
+        <div class="mb-4 border border-gray-700 rounded-lg overflow-hidden">
+          <button onclick="toggleProcess('vigenere')"
+            class="w-full bg-gray-700 p-3 text-left font-semibold text-blue-300 flex justify-between items-center">
+            <span>2. Vigenere Cipher</span>
+            <svg id="arrow-vigenere" class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          <div id="process-vigenere" class="hidden p-4 bg-gray-900">
+            <div class="mb-3">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-green-400 font-medium">Hasil Vigenere:</span>
+                <button onclick="copyStepResult('vigenere')"
+                  class="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs">Copy</button>
+              </div>
+              <p id="result-vigenere" class="text-sm break-all bg-gray-800 p-2 rounded">{{ steps.Vigenere }}</p>
+            </div>
+
+            <!-- Tabel Perhitungan Vigenere -->
+            {% if detailed_data.vigenere.process %}
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full text-sm text-left text-gray-300 border border-gray-700 rounded-lg">
+                <thead class="bg-gray-700 text-gray-100">
+                  <tr>
+                    <th class="px-3 py-2 border border-gray-600">No</th>
+                    <th class="px-3 py-2 border border-gray-600">P (Plaintext)</th>
+                    <th class="px-3 py-2 border border-gray-600">K (Key)</th>
+                    <th class="px-3 py-2 border border-gray-600">
+                      {% if mode == 'encrypt' %}
+                      (P + K) mod 36
+                      {% else %}
+                      (C - K) mod 36
+                      {% endif %}
+                    </th>
+                    <th class="px-3 py-2 border border-gray-600">Hasil (angka)</th>
+                    <th class="px-3 py-2 border border-gray-600">Hasil (huruf/angka)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for step in detailed_data.vigenere.process %}
+                  <tr class="hover:bg-gray-700 transition">
+                    <td class="px-3 py-2 border border-gray-700 text-center">{{ loop.index }}</td>
+                    <td class="px-3 py-2 border border-gray-700">{{ step.P }}</td>
+                    <td class="px-3 py-2 border border-gray-700">{{ step.K }}</td>
+                    <td class="px-3 py-2 border border-gray-700 text-center">
+                      {% if step.hasil != "-" %}
+                      {% if mode == 'encrypt' %}
+                      ({{ step.P.split('->')[-1] }} + {{ step.K.split('->')[-1] }}) mod 36 = {{ step.hasil }}
+                      {% else %}
+                      ({{ step.P.split('->')[-1] }} - {{ step.K.split('->')[-1] }}) mod 36 = {{ step.hasil }}
+                      {% endif %}
+                      {% else %}
+                      -
+                      {% endif %}
+                    </td>
+                    <td class="px-3 py-2 border border-gray-700 text-center">{{ step.hasil }}</td>
+                    <td class="px-3 py-2 border border-gray-700 font-semibold text-blue-400 text-center">
+                      {{ step.char }}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Stream Cipher Process -->
+        <div class="mb-4 border border-gray-700 rounded-lg overflow-hidden">
+          <button onclick="toggleProcess('stream')"
+            class="w-full bg-gray-700 p-3 text-left font-semibold text-blue-300 flex justify-between items-center">
+            <span>3. Stream Cipher (LFSR)</span>
+            <svg id="arrow-stream" class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          <div id="process-stream" class="hidden p-4 bg-gray-900">
+            <div class="mb-3">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-green-400 font-medium">Hasil Stream:</span>
+                <button onclick="copyStepResult('stream')"
+                  class="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs">Copy</button>
+              </div>
+              <p id="result-stream" class="text-sm break-all bg-gray-800 p-2 rounded font-mono">{{ steps.Stream }}</p>
+            </div>
+
+            <!-- Tabel XOR Stream Cipher -->
+            {% if detailed_data.stream.process %}
+            <div class="mt-4">
+              <p class="text-green-400 font-medium mb-2">Proses XOR:</p>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-300 border border-gray-700 rounded-lg">
+                  <thead class="bg-gray-700 text-gray-100">
+                    <tr>
+                      <th class="px-3 py-2 border border-gray-600">No</th>
+                      {% if mode == 'encrypt' %}
+                      <th class="px-3 py-2 border border-gray-600">Plaintext Bit</th>
+                      <th class="px-3 py-2 border border-gray-600">Keystream</th>
+                      <th class="px-3 py-2 border border-gray-600">Cipher Bit</th>
+                      <th class="px-3 py-2 border border-gray-600">Operasi XOR</th>
+                      {% else %}
+                      <th class="px-3 py-2 border border-gray-600">Cipher Bit</th>
+                      <th class="px-3 py-2 border border-gray-600">Keystream</th>
+                      <th class="px-3 py-2 border border-gray-600">Plaintext Bit</th>
+                      <th class="px-3 py-2 border border-gray-600">Operasi XOR</th>
+                      {% endif %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for row in detailed_data.stream.process %}
+                    <tr class="hover:bg-gray-700 transition">
+                      <td class="px-3 py-2 border border-gray-700 text-center">{{ loop.index }}</td>
+                      {% if mode == 'encrypt' %}
+                      <td class="px-3 py-2 border border-gray-700 text-center font-mono">{{ row.pt }}</td>
+                      <td class="px-3 py-2 border border-gray-700 text-center font-mono">{{ row.ks }}</td>
+                      <td class="px-3 py-2 border border-gray-700 text-center font-mono">{{ row.ct }}</td>
+                      <td class="px-3 py-2 border border-gray-700 text-center font-mono">{{ row.pt }} ⊕ {{ row.ks }} =
+                        {{ row.ct }}</td>
+                      {% else %}
+                      <td class="px-3 py-2 border border-gray-700 text-center font-mono">{{ row.ct }}</td>
+                      <td class="px-3 py-2 border border-gray-700 text-center font-mono">{{ row.ks }}</td>
+                      <td class="px-3 py-2 border border-gray-700 text-center font-mono">{{ row.pt }}</td>
+                      <td class="px-3 py-2 border border-gray-700 text-center font-mono">{{ row.ct }} ⊕ {{ row.ks }} =
+                        {{ row.pt }}</td>
+                      {% endif %}
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- AES Process -->
+        <div class="mb-4 border border-gray-700 rounded-lg overflow-hidden">
+          <button onclick="toggleProcess('aes')"
+            class="w-full bg-gray-700 p-3 text-left font-semibold text-blue-300 flex justify-between items-center">
+            <span class="text-sm sm:text-base">4. AES Cipher</span>
+            <svg id="arrow-aes" class="w-4 h-4 transform transition-transform flex-shrink-0" fill="none"
+              stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          <div id="process-aes" class="hidden p-3 sm:p-4 bg-gray-900">
+            <div class="mb-3">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+                <span class="text-green-400 font-medium text-sm sm:text-base">Hasil AES:</span>
+                <button onclick="copyStepResult('aes')"
+                  class="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs sm:text-sm w-full sm:w-auto">Copy</button>
+              </div>
+              <div class="relative">
+                <p id="result-aes"
+                  class="text-xs sm:text-sm break-all bg-gray-800 p-2 rounded font-mono overflow-x-auto max-h-40 overflow-y-auto">
+                  {{ steps.AES }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Proses Detail AES -->
+            {% if detailed_data.aes.process %}
+            <div class="mt-4">
+              <p class="text-green-400 font-medium mb-2 text-sm sm:text-base">Proses AES:</p>
+              <div class="space-y-2 sm:space-y-3">
+                {% for step in detailed_data.aes.process %}
+                <div class="bg-gray-800 p-2 sm:p-3 rounded text-xs sm:text-sm">
+                  <div class="flex items-start">
+                    <span class="text-blue-400 font-mono mr-2 flex-shrink-0">•</span>
+                    <span class="text-gray-300 break-words">{{ step }}</span>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+
+              <!-- Ringkasan Teknis AES -->
+              <div class="mt-4 bg-gray-800 p-3 rounded">
+                <p class="text-green-400 font-medium mb-2 text-sm sm:text-base">Ringkasan Teknis:</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
+                  <div class="flex justify-between">
+                    <span class="text-gray-400">Mode:</span>
+                    <span class="text-blue-400">ECB</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-400">Block Size:</span>
+                    <span class="text-blue-400">128 bit (16 byte)</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-400">Key Size:</span>
+                    <span class="text-blue-400">
+                      {% if detailed_data.aes.process %}
+                      {% for step in detailed_data.aes.process %}
+                      {% if 'Panjang key valid' in step %}
+                      {{ step.split(': ')[1] }}
+                      {% endif %}
+                      {% endfor %}
+                      {% else %}
+                      128/192/256 bit
+                      {% endif %}
+                    </span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-400">Padding:</span>
+                    <span class="text-blue-400">PKCS7</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Proses Log Sederhana -->
+      {% if process and not steps %}
       <div class="mt-6 bg-gray-800 p-4 rounded-lg max-h-60 overflow-y-auto">
-        <p class="font-semibold text-blue-400 mb-2">Langkah-Langkah Kombinasi:</p>
+        <p class="font-semibold text-blue-400 mb-2">Log Proses:</p>
         <ul class="list-disc pl-5 text-sm space-y-1 text-gray-300">
           {% for step in process %}
           <li class="break-words">{{ step }}</li>

@@ -7,7 +7,7 @@ app = Flask(__name__)
 # ================== RAIL FENCE  ==================
 
 def key_to_number(key):
-    if key.isdigit(): #mengecek aapakah key berupa angka
+    if key.isdigit(): 
         return max(2, int(key)) 
     else:
         key = key.upper()  
@@ -17,14 +17,13 @@ def key_to_number(key):
 
 def railfence_encrypt(text, key):
 
-    rail = [['\n' for _ in range(len(text))] for _ in range(key)] # Buat matriks 2D berisi karakter '\n'
+    rail = [['\n' for _ in range(len(text))] for _ in range(key)] # Buat matriks 2D berisi karakter '\n' 
     
 #Inisialisasi Arah dan Posisi Awal
     dir_down = False   
     row, col = 0, 0    
     process = []      
-
-# Algoritma RAIL FENCE  
+  
     for i, ch in enumerate(text):    
         #  ubah arah (naik/turun)       
         if row == 0 or row == key - 1:      
@@ -45,7 +44,7 @@ def railfence_encrypt(text, key):
 
 def railfence_decrypt(cipher, key):
    
-    rail = [['\n' for _ in range(len(cipher))] for _ in range(key)] # Buat matriks 2D berisi karakter '\n'
+    rail = [['\n' for _ in range(len(cipher))] for _ in range(key)] # Buat matriks 2D 
     
     dir_down = None     
     row, col = 0, 0    
@@ -67,15 +66,13 @@ def railfence_decrypt(cipher, key):
             if rail[i][j] == '*' and index < len(cipher):
                 rail[i][j] = cipher[index]  
                 index += 1
-
     result = [] 
-    #menentukan posisi awal dan menentukan arah                            
+    #menentukan posisi dan menentukan arah                            
     row, col = 0, 0
     dir_down = None 
     process = []          
 
     for i in range(len(cipher)):
-        # Tentukan arah
         if row == 0:
             dir_down = True
         elif row == key - 1:
@@ -146,7 +143,6 @@ def vigenere_encrypt(text, key):
             })
 
     return result, process
-
 
 def vigenere_decrypt(cipher, key):
     result = ""
@@ -223,41 +219,96 @@ def stream_cipher_lfsr(text, seed, taps, mode="encrypt"):
         return plaintext, proses
 
 # ================== AES ==================
-
 def normalize_aes_key(key: str) -> bytes:
     """Menyesuaikan panjang key AES agar valid (16, 24, atau 32 byte)"""
     key_bytes = key.encode('utf-8')
+    original_length = len(key_bytes)
+    process_steps = []
+    
+    process_steps.append(f"Key awal: '{key}' ({original_length} byte)")
+    
     while len(key_bytes) not in [16, 24, 32]:
         if len(key_bytes) > 32:
             key_bytes = key_bytes[:32]
+            process_steps.append(f"Key dipotong menjadi {len(key_bytes)} byte (terlalu panjang)")
         elif len(key_bytes) < 16:
             key_bytes = (key_bytes * 2)[:16]
+            process_steps.append(f"Key diulang dan dipotong menjadi {len(key_bytes)} byte (terlalu pendek)")
         elif 16 < len(key_bytes) < 24:
             key_bytes = (key_bytes * 2)[:24]
+            process_steps.append(f"Key diulang dan dipotong menjadi {len(key_bytes)} byte")
         elif 24 < len(key_bytes) < 32:
             key_bytes = (key_bytes * 2)[:32]
-    return key_bytes
+            process_steps.append(f"Key diulang dan dipotong menjadi {len(key_bytes)} byte")
+    
+    process_steps.append(f"Key akhir: {len(key_bytes)} byte - {key_bytes.hex()}")
+    return key_bytes, process_steps
 
 def aes_encrypt(plaintext, key):
     process = []
-    key_bytes = normalize_aes_key(key)
+    
+    # Normalisasi key dengan proses detail
+    key_bytes, key_process = normalize_aes_key(key)
+    process.extend(key_process)
+    
+    process.append(f"Panjang key valid: {len(key_bytes)} byte")
+    
     if len(key_bytes) not in [16, 24, 32]:
         raise ValueError("Key harus 16, 24, atau 32 byte!")
+    
+    # Buat cipher
     cipher = AES.new(key_bytes, AES.MODE_ECB)
-    padded_text = pad(plaintext.encode('utf-8'), AES.block_size)
+    process.append("Cipher AES dibuat dengan mode ECB")
+    
+    # Padding
+    plaintext_bytes = plaintext.encode('utf-8')
+    process.append(f"Plaintext: '{plaintext}' ({len(plaintext_bytes)} byte)")
+    process.append(f"Plaintext (hex): {plaintext_bytes.hex()}")
+    
+    padded_text = pad(plaintext_bytes, AES.block_size)
+    process.append(f"Setelah padding: {len(padded_text)} byte")
+    process.append(f"Padded text (hex): {padded_text.hex()}")
+    
+    # Enkripsi
     encrypted_bytes = cipher.encrypt(padded_text)
+    process.append(f"Hasil enkripsi: {len(encrypted_bytes)} byte")
+    process.append(f"Ciphertext (hex): {encrypted_bytes.hex()}")
+    
+    # Base64 encode
     base64_cipher = base64.b64encode(encrypted_bytes).decode('utf-8')
+    process.append(f"Ciphertext (base64): {base64_cipher}")
+    
     return base64_cipher, process
 
 def aes_decrypt(ciphertext, key):
     process = []
-    key_bytes = normalize_aes_key(key)
+    
+    # Normalisasi key dengan proses detail
+    key_bytes, key_process = normalize_aes_key(key)
+    process.extend(key_process)
+    
+    process.append(f"Panjang key valid: {len(key_bytes)} byte")
+    
+    # Buat cipher
     cipher = AES.new(key_bytes, AES.MODE_ECB)
+    process.append("Cipher AES dibuat dengan mode ECB")
+    
+    # Base64 decode
+    process.append(f"Ciphertext input: {ciphertext}")
     decoded_data = base64.b64decode(ciphertext)
+    process.append(f"Setelah decode base64: {len(decoded_data)} byte")
+    process.append(f"Data decoded (hex): {decoded_data.hex()}")
+    
+    # Dekripsi
     decrypted_bytes = cipher.decrypt(decoded_data)
+    process.append(f"Hasil dekripsi (dengan padding): {len(decrypted_bytes)} byte")
+    process.append(f"Decrypted bytes (hex): {decrypted_bytes.hex()}")
+    
+    # Unpadding
     unpadded_text = unpad(decrypted_bytes, AES.block_size).decode('utf-8')
-    process.append(f"Ciphertext didekode base64: {decoded_data}")
-    process.append(f"Hasil decrypt (unpadded): {unpadded_text}")
+    process.append(f"Setelah unpadding: '{unpadded_text}'")
+    
+    return unpadded_text, process
     return unpadded_text, process
 
 # ================== ROUTES ==================
@@ -283,9 +334,7 @@ def railfence_visualize(text, key):
             dir_down = not dir_down
 
         row += 1 if dir_down else -1
-
     return rail
-
 
 @app.route("/railfence", methods=["GET", "POST"])
 def railfence_page():
@@ -296,7 +345,7 @@ def railfence_page():
     key_input = ""
     key_used = 2
 
-    # Proses form ketika metode POST
+    # Proses form 
     if request.method == "POST":
         text = request.form.get("text", "")
         key_input = request.form.get("key", "2")
@@ -380,6 +429,14 @@ def combine_page():
     result = ""
     process = []
     steps = {}
+    detailed_data = {  # UBAH INI dari detailed_process ke detailed_data
+        "railfence": {"process": [], "grid": None},
+        "vigenere": {"process": []},
+        "stream": {"process": []},
+        "aes": {"process": []}
+    }
+    visualizations = {}
+    
     if request.method == "POST":
         text = request.form.get("text", "")
         key = request.form.get("key", "")
@@ -388,62 +445,88 @@ def combine_page():
         try:
             if mode == "encrypt":
                 key_rails = key_to_number(key)
+                
                 # 1️⃣ Rail Fence
                 rf_res, proc_rf = railfence_encrypt(text, key_rails)
                 steps["Railfence"] = rf_res
+                detailed_data["railfence"]["process"] = proc_rf
+                detailed_data["railfence"]["grid"] = railfence_visualize(text, key_rails)
+                visualizations["railfence"] = railfence_visualize(text, key_rails)
                 process.append("=== Rail Fence ENCRYPT ===")
                 process.extend(proc_rf)
 
                 # 2️⃣ Vigenere
                 vigenere_res, proc_vigenere = vigenere_encrypt(rf_res, key)
                 steps["Vigenere"] = vigenere_res
+                detailed_data["vigenere"]["process"] = proc_vigenere
                 process.append("\n=== VIGENERE ENCRYPT ===")
-                process.extend(proc_vigenere)
+                for p in proc_vigenere:
+                    process.append(str(p))
 
                 # 3️⃣ Stream
                 stream_res, proc_stream = stream_cipher_lfsr(vigenere_res, seed=key, taps=[0, 2], mode="encrypt")
                 steps["Stream"] = stream_res
+                detailed_data["stream"]["process"] = proc_stream
                 process.append("\n=== STREAM ENCRYPT ===")
-                process.extend([str(p) for p in proc_stream])
+                for p in proc_stream:
+                    process.append(str(p))
 
                 # 4️⃣ AES
                 aes_res, proc_aes = aes_encrypt(stream_res, key)
                 steps["AES"] = aes_res
+                detailed_data["aes"]["process"] = proc_aes
                 process.append("\n=== AES ENCRYPT ===")
                 process.extend(proc_aes)
 
                 result = aes_res
+                
             elif mode == "decrypt":
                 key_rails = key_to_number(key)
+                
                 # 1️⃣ AES
                 aes_res, proc_aes = aes_decrypt(text, key)
                 steps["AES"] = aes_res
+                detailed_data["aes"]["process"] = proc_aes
                 process.append("=== AES DECRYPT ===")
                 process.extend(proc_aes)
 
                 # 2️⃣ Stream
                 stream_res, proc_stream = stream_cipher_lfsr(aes_res, seed=key, taps=[0, 2], mode="decrypt")
                 steps["Stream"] = stream_res
+                detailed_data["stream"]["process"] = proc_stream
                 process.append("\n=== STREAM DECRYPT ===")
-                process.extend([str(p) for p in proc_stream])
+                for p in proc_stream:
+                    process.append(str(p))
 
                 # 3️⃣ Vigenere
                 vigenere_res, proc_vigenere = vigenere_decrypt(stream_res, key)
                 steps["Vigenere"] = vigenere_res
+                detailed_data["vigenere"]["process"] = proc_vigenere
                 process.append("\n=== VIGENERE DECRYPT ===")
-                process.extend(proc_vigenere)
+                for p in proc_vigenere:
+                    process.append(str(p))
 
                 # 4️⃣ Rail Fence
                 rf_res, proc_rf = railfence_decrypt(vigenere_res, key_rails)
                 steps["Railfence"] = rf_res
+                detailed_data["railfence"]["process"] = proc_rf
+                detailed_data["railfence"]["grid"] = railfence_visualize(rf_res, key_rails)
+                visualizations["railfence"] = railfence_visualize(rf_res, key_rails)
                 process.append("\n=== RAILFENCE DECRYPT ===")
                 process.extend(proc_rf)
 
                 result = rf_res
+                
         except Exception as e:
             process.append(f"❌ Error: {str(e)}")
 
-    return render_template("combine.html", result=result, process=process, steps=steps)
+    return render_template("combine.html", 
+                         result=result, 
+                         process=process, 
+                         steps=steps,
+                         detailed_data=detailed_data,  # UBAH INI
+                         visualizations=visualizations,
+                         mode=request.form.get('mode', ''))
 
 if __name__ == "__main__":
     app.run(debug=True)
